@@ -1,0 +1,32 @@
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/node_modules/
+frontend/.env*
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+backend/__pycache__/
+.venv/
+venv/
+ENV/
+.env
+
+# Database
+*.db
+backend/*.db
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
