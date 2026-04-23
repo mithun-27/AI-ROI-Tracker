@@ -7,6 +7,7 @@ import FeatureROIChart from "@/components/dashboard/FeatureROIChart";
 import FeatureTable from "@/components/dashboard/FeatureTable";
 import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import OptimizationCards from "@/components/dashboard/OptimizationCards";
+import ManagementModal from "@/components/dashboard/ManagementModal";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const [optimizations, setOptimizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -52,13 +54,18 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="app-layout">
-        <Header />
+        <Header onOpenManage={() => setIsManageModalOpen(true)} />
         <main className="app-main">
           <div className="loading-container">
             <div className="loading-spinner" />
             <span className="loading-text">Loading analytics...</span>
           </div>
         </main>
+        <ManagementModal 
+          isOpen={isManageModalOpen} 
+          onClose={() => setIsManageModalOpen(false)} 
+          onRefresh={fetchData} 
+        />
       </div>
     );
   }
@@ -66,7 +73,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="app-layout">
-        <Header />
+        <Header onOpenManage={() => setIsManageModalOpen(true)} />
         <main className="app-main">
           <div className="loading-container">
             <div style={{ fontSize: 48 }}>⚠️</div>
@@ -81,13 +88,18 @@ export default function DashboardPage() {
             </button>
           </div>
         </main>
+        <ManagementModal 
+          isOpen={isManageModalOpen} 
+          onClose={() => setIsManageModalOpen(false)} 
+          onRefresh={fetchData} 
+        />
       </div>
     );
   }
 
   return (
     <div className="app-layout">
-      <Header />
+      <Header onOpenManage={() => setIsManageModalOpen(true)} />
       <main className="app-main">
         {/* ── Top-level KPIs ───────────────────────────────────── */}
         <StatsCards analytics={analytics} />
@@ -130,11 +142,17 @@ export default function DashboardPage() {
           <FeatureTable features={analytics.feature_comparisons} />
         </div>
       </main>
+
+      <ManagementModal 
+        isOpen={isManageModalOpen} 
+        onClose={() => setIsManageModalOpen(false)} 
+        onRefresh={fetchData} 
+      />
     </div>
   );
 }
 
-function Header() {
+function Header({ onOpenManage }) {
   return (
     <header className="app-header">
       <div className="app-logo">
@@ -143,6 +161,9 @@ function Header() {
         <span className="app-logo-badge">v1.0</span>
       </div>
       <div className="app-header-actions">
+        <button className="btn-ghost" onClick={onOpenManage} style={{ marginRight: '12px' }}>
+          + Manage Data
+        </button>
         <div className="header-status">
           <span className="dot" />
           Live Tracking

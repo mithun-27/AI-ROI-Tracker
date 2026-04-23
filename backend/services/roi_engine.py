@@ -85,23 +85,42 @@ def calculate_feature_roi(db: Session, feature_id: int) -> dict:
     roi_score = ((total_value - total_cost) / total_cost) if total_cost > 0 else 0
 
     # ── Update or create ROI Summary ─────────────────────────────
-    roi_summary = db.query(ROISummary).filter(ROISummary.feature_id == feature_id).first()
-    if not roi_summary:
-        roi_summary = ROISummary(feature_id=feature_id)
-        db.add(roi_summary)
+    try:
+        roi_summary = db.query(ROISummary).filter(ROISummary.feature_id == feature_id).first()
+        if not roi_summary:
+            roi_summary = ROISummary(feature_id=feature_id)
+            db.add(roi_summary)
 
-    roi_summary.total_calls = total_calls
-    roi_summary.total_tokens = total_tokens
-    roi_summary.total_cost = round(total_cost, 2)
-    roi_summary.total_value = round(total_value, 2)
-    roi_summary.roi_score = round(roi_score, 2)
-    roi_summary.avg_engagement = round(avg_engagement, 2)
-    roi_summary.retention_rate = round(retention_rate, 4)
-    roi_summary.conversion_rate = round(conversion_rate, 4)
-    roi_summary.last_updated = datetime.now(timezone.utc)
+        roi_summary.total_calls = total_calls
+        roi_summary.total_tokens = total_tokens
+        roi_summary.total_cost = round(total_cost, 2)
+        roi_summary.total_value = round(total_value, 2)
+        roi_summary.roi_score = round(roi_score, 2)
+        roi_summary.avg_engagement = round(avg_engagement, 2)
+        roi_summary.retention_rate = round(retention_rate, 4)
+        roi_summary.conversion_rate = round(conversion_rate, 4)
+        roi_summary.last_updated = datetime.now(timezone.utc)
 
-    db.commit()
-    db.refresh(roi_summary)
+        db.commit()
+        db.refresh(roi_summary)
+    except Exception as e:
+        db.rollback()
+        # Fallback: if it was a race condition, try to get the existing one again
+        roi_summary = db.query(ROISummary).filter(ROISummary.feature_id == feature_id).first()
+        if roi_summary:
+            roi_summary.total_calls = total_calls
+            roi_summary.total_tokens = total_tokens
+            roi_summary.total_cost = round(total_cost, 2)
+            roi_summary.total_value = round(total_value, 2)
+            roi_summary.roi_score = round(roi_score, 2)
+            roi_summary.avg_engagement = round(avg_engagement, 2)
+            roi_summary.retention_rate = round(retention_rate, 4)
+            roi_summary.conversion_rate = round(conversion_rate, 4)
+            roi_summary.last_updated = datetime.now(timezone.utc)
+            db.commit()
+            db.refresh(roi_summary)
+        else:
+            raise e
 
     return {
         "feature_id": feature_id,
